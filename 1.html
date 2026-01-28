@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>摄像头监控与拍摄系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a3a, #0d1520);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #3a506b;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #6ee7b7;
+            text-shadow: 0 0 10px rgba(110, 231, 183, 0.3);
+        }
+        
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .camera-section {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .camera-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            color: #6ee7b7;
+            font-size: 1.5rem;
+        }
+        
+        .camera-title i {
+            margin-right: 12px;
+            font-size: 1.8rem;
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background-color: #0f172a;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 2px solid #3a506b;
+        }
+        
+        #videoFeed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .camera-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, #10b981, #6ee7b7);
+            color: #0f172a;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+        }
+        
+        .capture-section {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .captured-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            color: #60a5fa;
+            font-size: 1.5rem;
+        }
+        
+        .captured-title i {
+            margin-right: 12px;
+            font-size: 1.8rem;
+        }
+        
+        .capture-display {
+            width: 100%;
+            height: 250px;
+            background-color: #0f172a;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #3a506b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        #capturedImage {
+            max-width: 100%;
+            max-height: 100%;
+            display: none;
+        }
+        
+        .placeholder-text {
+            color: #64748b;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .storage-section {
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            margin-top: 20px;
+        }
+        
+        .storage-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            color: #a78bfa;
+            font-size: 1.5rem;
+        }
+        
+        .storage-title i {
+            margin-right: 12px;
+            font-size: 1.8rem;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background: rgba(15, 23, 42, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 5px solid #6ee7b7;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #6ee7b7;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+        
+        .captures-list {
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(15, 23, 42, 0.7);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 25px;
+            border: 1px solid #334155;
+        }
+        
+        .capture-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .capture-item:last-child {
+            border-bottom: none;
+        }
+        
+        .capture-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .capture-time {
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 5px;
+        }
+        
+        .capture-id {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+        
+        .capture-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            border-radius: 5px;
+        }
+        
+        .no-captures {
+            text-align: center;
+            color: #64748b;
+            padding: 30px;
+        }
+        
+        .export-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .camera-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            align-items: center;
+            background: rgba(239, 68, 68, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            z-index: 10;
+        }
+        
+        .camera-indicator::before {
+            content: '';
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            background: #10b981;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(150%);
+            transition: transform 0.4s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background: #ef4444;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .video-container, .capture-display {
+                height: 300px;
+            }
+            
+            .camera-controls, .export-controls {
+                flex-wrap: wrap;
+            }
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 30px;
+            border-top: 1px solid #334155;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-video"></i> 摄像头监控与拍摄系统</h1>
+            <p class="subtitle">实时监控画面 | 帧捕获 | 数据存储</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="camera-section">
+                <div class="camera-title">
+                    <i class="fas fa-camera"></i> 实时监控画面
+                </div>
+                <div class="video-container">
+                    <div class="camera-indicator">
+                        <span>摄像头工作中</span>
+                    </div>
+                    <video id="videoFeed" autoplay playsinline></video>
+                </div>
+                <div class="camera-controls">
+                    <button class="btn btn-primary" id="startCamera">
+                        <i class="fas fa-play"></i> 启动摄像头
+                    </button>
+                    <button class="btn btn-secondary" id="captureBtn" disabled>
+                        <i class="fas fa-camera"></i> 拍摄帧
+                    </button>
+                    <button class="btn btn-danger" id="stopCamera" disabled>
+                        <i class="fas fa-stop"></i> 停止摄像头
+                    </button>
+                </div>
+            </div>
+            
+            <div class="capture-section">
+                <div class="captured-title">
+                    <i class="fas fa-image"></i> 最新拍摄帧
+                </div>
+                <div class="capture-display">
+                    <canvas id="captureCanvas" style="display:none;"></canvas>
+                    <img id="capturedImage" alt="拍摄的画面">
+                    <div class="placeholder-text" id="capturePlaceholder">
+                        <i class="fas fa-image fa-3x"></i>
+                        <p>拍摄的帧将在这里显示</p>
+                    </div>
+                </div>
+                <div class="camera-controls">
+                    <button class="btn btn-secondary" id="saveToDB" disabled>
+                        <i class="fas fa-database"></i> 保存到数据库
+                    </button>
+                    <button class="btn btn-primary" id="clearCapture">
+                        <i class="fas fa-trash"></i> 清除帧
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="storage-section">
+            <div class="storage-title">
+                <i class="fas fa-database"></i> 数据存储管理
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalCaptures">0</div>
+                    <div class="stat-label">总拍摄帧数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="dbSize">0 KB</div>
+                    <div class="stat-label">数据库大小</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="lastCapture">无</div>
+                    <div class="stat-label">最后拍摄时间</div>
+                </div>
+            </div>
+            
+            <div class="captures-list" id="capturesList">
+                <div class="no-captures" id="noCapturesMessage">
+                    <i class="fas fa-database fa-2x"></i>
+                    <p>暂无拍摄记录</p>
+                </div>
+            </div>
+            
+            <div class="export-controls">
+                <button class="btn btn-primary" id="exportSQLite">
+                    <i class="fas fa-file-export"></i> 导出为SQLite文件
+                </button>
+                <button class="btn btn-danger" id="clearDatabase">
+                    <i class="fas fa-trash-alt"></i> 清空数据库
+                </button>
+            </div>
+        </div>
+        
+        <footer>
+            <p>摄像头监控系统 &copy; 2023 | 使用HTML5 Media API和IndexedDB技术</p>
+            <p>注意：此系统仅在浏览器中运行，数据存储在本地IndexedDB中</p>
+        </footer>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // DOM元素
+        const videoFeed = document.getElementById('videoFeed');
+        const captureCanvas = document.getElementById('captureCanvas');
+        const capturedImage = document.getElementById('capturedImage');
+        const capturePlaceholder = document.getElementById('capturePlaceholder');
+        const startCameraBtn = document.getElementById('startCamera');
+        const stopCameraBtn = document.getElementById('stopCamera');
+        const captureBtn = document.getElementById('captureBtn');
+        const saveToDBBtn = document.getElementById('saveToDB');
+        const clearCaptureBtn = document.getElementById('clearCapture');
+        const exportSQLiteBtn = document.getElementById('exportSQLite');
+        const clearDatabaseBtn = document.getElementById('clearDatabase');
+        const totalCapturesEl = document.getElementById('totalCaptures');
+        const dbSizeEl = document.getElementById('dbSize');
+        const lastCaptureEl = document.getElementById('lastCapture');
+        const capturesList = document.getElementById('capturesList');
+        const noCapturesMessage = document.getElementById('noCapturesMessage');
+        const notification = document.getElementById('notification');
+        
+        // 全局变量
+        let stream = null;
+        let currentCapture = null;
+        let db = null;
+        const DB_NAME = 'CameraCaptureDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'captures';
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', init);
+        
+        async function init() {
+            // 初始化数据库
+            await initDatabase();
+            
+            // 更新统计数据
+            updateStats();
+            
+            // 加载捕获记录
+            loadCaptures();
+            
+            // 添加事件监听器
+            startCameraBtn.addEventListener('click', startCamera);
+            stopCameraBtn.addEventListener('click', stopCamera);
+            captureBtn.addEventListener('click', captureFrame);
+            saveToDBBtn.addEventListener('click', saveToDatabase);
+            clearCaptureBtn.addEventListener('click', clearCapture);
+            exportSQLiteBtn.addEventListener('click', exportToSQLite);
+            clearDatabaseBtn.addEventListener('click', clearDatabase);
+            
+            // 检查是否支持摄像头
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showNotification('您的浏览器不支持摄像头访问功能', true);
+                startCameraBtn.disabled = true;
+            }
+        }
+        
+        // 初始化IndexedDB数据库
+        function initDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = () => {
+                    console.error('数据库打开失败:', request.error);
+                    reject(request.error);
+                };
+                
+                request.onsuccess = () => {
+                    db = request.result;
+                    console.log('数据库打开成功');
+                    resolve();
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    
+                    // 创建存储对象
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('timestamp', 'timestamp', { unique: false });
+                        console.log('数据库结构创建成功');
+                    }
+                };
+            });
+        }
+        
+        // 启动摄像头
+        async function startCamera() {
+            try {
+                // 获取摄像头访问权限
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 1280, height: 720, facingMode: 'environment' },
+                    audio: false 
+                });
+                
+                // 将视频流显示在video元素上
+                videoFeed.srcObject = stream;
+                
+                // 更新按钮状态
+                startCameraBtn.disabled = true;
+                stopCameraBtn.disabled = false;
+                captureBtn.disabled = false;
+                
+                showNotification('摄像头启动成功');
+            } catch (error) {
+                console.error('摄像头启动失败:', error);
+                showNotification(`摄像头启动失败: ${error.message}`, true);
+            }
+        }
+        
+        // 停止摄像头
+        function stopCamera() {
+            if (stream) {
+                // 停止所有轨道
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                
+                // 清除视频显示
+                videoFeed.srcObject = null;
+                
+                // 更新按钮状态
+                startCameraBtn.disabled = false;
+                stopCameraBtn.disabled = true;
+                captureBtn.disabled = true;
+                saveToDBBtn.disabled = true;
+                
+                showNotification('摄像头已停止');
+            }
+        }
+        
+        // 捕获帧
+        function captureFrame() {
+            if (!stream) return;
+            
+            // 设置画布尺寸与视频相同
+            const video = videoFeed;
+            captureCanvas.width = video.videoWidth;
+            captureCanvas.height = video.videoHeight;
+            
+            // 将视频帧绘制到画布上
+            const ctx = captureCanvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
+            
+            // 将画布内容转换为数据URL
+            currentCapture = captureCanvas.toDataURL('image/jpeg', 0.8);
+            
+            // 显示捕获的图像
+            capturedImage.src = currentCapture;
+            capturedImage.style.display = 'block';
+            capturePlaceholder.style.display = 'none';
+            
+            // 启用保存按钮
+            saveToDBBtn.disabled = false;
+            
+            showNotification('画面已捕获');
+        }
+        
+        // 清除捕获的帧
+        function clearCapture() {
+            currentCapture = null;
+            capturedImage.src = '';
+            capturedImage.style.display = 'none';
+            capturePlaceholder.style.display = 'block';
+            saveToDBBtn.disabled = true;
+            
+            showNotification('捕获帧已清除');
+        }
+        
+        // 保存到数据库
+        function saveToDatabase() {
+            if (!currentCapture) {
+                showNotification('没有可保存的图像', true);
+                return;
+            }
+            
+            // 创建捕获记录
+            const captureRecord = {
+                timestamp: new Date().toISOString(),
+                imageData: currentCapture,
+                width: captureCanvas.width,
+                height: captureCanvas.height,
+                format: 'image/jpeg'
+            };
+            
+            // 保存到IndexedDB
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.add(captureRecord);
+            
+            request.onsuccess = () => {
+                showNotification('图像已保存到数据库');
+                
+                // 更新统计数据
+                updateStats();
+                
+                // 重新加载捕获记录
+                loadCaptures();
+                
+                // 清除当前捕获
+                clearCapture();
+            };
+            
+            request.onerror = () => {
+                console.error('保存失败:', request.error);
+                showNotification('保存失败: ' + request.error.message, true);
+            };
+        }
+        
+        // 更新统计数据
+        function updateStats() {
+            if (!db) return;
+            
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const countRequest = store.count();
+            const getAllRequest = store.getAll();
+            
+            countRequest.onsuccess = () => {
+                totalCapturesEl.textContent = countRequest.result;
+            };
+            
+            getAllRequest.onsuccess = () => {
+                const captures = getAllRequest.result;
+                
+                // 更新数据库大小
+                const dbSize = calculateDBSize(captures);
+                dbSizeEl.textContent = dbSize;
+                
+                // 更新最后拍摄时间
+                if (captures.length > 0) {
+                    const lastCapture = captures[captures.length - 1];
+                    const date = new Date(lastCapture.timestamp);
+                    lastCaptureEl.textContent = date.toLocaleTimeString();
+                } else {
+                    lastCaptureEl.textContent = '无';
+                }
+            };
+        }
+        
+        // 计算数据库大小
+        function calculateDBSize(captures) {
+            let totalSize = 0;
+            
+            // 估算JSON数据大小
+            captures.forEach(capture => {
+                // 图像数据大小（base64编码比原始数据大约33%）
+                const imageSize = capture.imageData.length * 0.75;
+                // JSON元数据大小
+                const metadataSize = JSON.stringify(capture).length - capture.imageData.length;
+                totalSize += imageSize + metadataSize;
+            });
+            
+            // 转换为KB
+            const sizeInKB = totalSize / 1024;
+            
+            if (sizeInKB < 1024) {
+                return `${sizeInKB.toFixed(2)} KB`;
+            } else {
+                return `${(sizeInKB / 1024).toFixed(2)} MB`;
+            }
+        }
+        
+        // 加载捕获记录
+        function loadCaptures() {
+            if (!db) return;
+            
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const index = store.index('timestamp');
+            const request = index.openCursor(null, 'prev'); // 按时间倒序
+            
+            let capturesHTML = '';
+            let count = 0;
+            
+            request.onsuccess = (event) => {
+                const cursor = event.target.result;
+                
+                if (cursor && count < 10) { // 只显示最近10条记录
+                    const capture = cursor.value;
+                    const date = new Date(capture.timestamp);
+                    
+                    capturesHTML += `
+                        <div class="capture-item">
+                            <div class="capture-info">
+                                <div class="capture-time">${date.toLocaleString()}</div>
+                                <div class="capture-id">ID: ${capture.id} | 尺寸: ${capture.width}×${capture.height}</div>
+                            </div>
+                            <div class="capture-actions">
+                                <button class="btn btn-small btn-secondary" onclick="viewCapture(${capture.id})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-small btn-danger" onclick="deleteCapture(${capture.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    count++;
+                    cursor.continue();
+                } else {
+                    // 更新列表显示
+                    if (capturesHTML) {
+                        capturesList.innerHTML = capturesHTML;
+                        noCapturesMessage.style.display = 'none';
+                    } else {
+                        noCapturesMessage.style.display = 'block';
+                    }
+                }
+            };
+        }
+        
+        // 查看捕获的图像
+        function viewCapture(id) {
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.get(id);
+            
+            request.onsuccess = () => {
+                const capture = request.result;
+                if (capture) {
+                    capturedImage.src = capture.imageData;
+                    capturedImage.style.display = 'block';
+                    capturePlaceholder.style.display = 'none';
+                    saveToDBBtn.disabled = true; // 不能重复保存
+                    
+                    // 滚动到捕获显示区域
+                    document.querySelector('.capture-section').scrollIntoView({ behavior: 'smooth' });
+                    
+                    showNotification(`正在查看ID: ${id} 的图像`);
+                }
+            };
+        }
+        
+        // 删除捕获记录
+        function deleteCapture(id) {
+            if (!confirm('确定要删除这条记录吗？')) return;
+            
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.delete(id);
+            
+            request.onsuccess = () => {
+                showNotification('记录已删除');
+                updateStats();
+                loadCaptures();
+            };
+            
+            request.onerror = () => {
+                showNotification('删除失败', true);
+            };
+        }
+        
+        // 导出为SQLite格式
+        function exportToSQLite() {
+            if (!db) return;
+            
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.getAll();
+            
+            request.onsuccess = () => {
+                const captures = request.result;
+                
+                if (captures.length === 0) {
+                    showNotification('没有数据可导出', true);
+                    return;
+                }
+                
+                // 创建SQLite兼容的SQL文件
+                let sql = `-- 摄像头拍摄记录导出
+-- 生成时间: ${new Date().toISOString()}
+-- 记录数量: ${captures.length}
+
+CREATE TABLE IF NOT EXISTS captures (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,
+    width INTEGER NOT NULL,
+    height INTEGER NOT NULL,
+    format TEXT NOT NULL,
+    image_data TEXT NOT NULL
+);
+
+`;
+                
+                // 插入数据
+                captures.forEach(capture => {
+                    // 转义单引号
+                    const escapedImageData = capture.imageData.replace(/'/g, "''");
+                    
+                    sql += `INSERT INTO captures (timestamp, width, height, format, image_data) VALUES (
+        '${capture.timestamp}',
+        ${capture.width},
+        ${capture.height},
+        '${capture.format}',
+        '${escapedImageData}'
+    );\n`;
+                });
+                
+                // 创建下载链接
+                const blob = new Blob([sql], { type: 'application/sql' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `camera_captures_${new Date().toISOString().slice(0, 10)}.sql`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showNotification(`已导出 ${captures.length} 条记录到SQL文件`);
+            };
+        }
+        
+        // 清空数据库
+        function clearDatabase() {
+            if (!confirm('确定要清空数据库吗？此操作不可撤销！')) return;
+            
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.clear();
+            
+            request.onsuccess = () => {
+                showNotification('数据库已清空');
+                updateStats();
+                loadCaptures();
+            };
+            
+            request.onerror = () => {
+                showNotification('清空数据库失败', true);
+            };
+        }
+        
+        // 显示通知
+        function showNotification(message, isError = false) {
+            notification.textContent = message;
+            notification.className = 'notification';
+            
+            if (isError) {
+                notification.classList.add('error');
+            }
+            
+            notification.classList.add('show');
+            
+            // 3秒后隐藏
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>摄像头监控与图像保存</title>
+</head>
+<body>
+    <h1>摄像头监控与图像保存</h1>
+
+    <!-- 视频监控显示 -->
+    <video id="video" width="640" height="480" autoplay></video>
+
+    <button id="capture-btn">保存图像到数据库</button>
+
+    <script>
+        // 获取视频元素
+        const video = document.getElementById('video');
+
+        // 获取摄像头视频流并显示
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error("访问摄像头失败: ", err);
+            });
+
+        // 点击保存图像到数据库
+        document.getElementById('capture-btn').addEventListener('click', () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // 获取图像数据URL
+            const imageData = canvas.toDataURL('image/jpeg');
+
+            // 发送图像数据到后端保存
+            fetch('/save-frame', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ image: imageData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('图像保存成功:', data);
+            })
+            .catch(err => {
+                console.error('保存失败:', err);
+            });
+        });
+    </script>
+</body>
+</html>
